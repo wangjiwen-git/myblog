@@ -1,0 +1,10 @@
+{% extends "base.html" %}  <!-- 继承基础模板 -->
+
+{% block content %}  <!-- 开始内容块 -->
+    <form class="auth-form" method="POST">
+        <h2>注册</h2>
+        <input type="text" name="username" placeholder="用户名" required>
+        <input type="password" name="password" placeholder="密码" required>
+        <button type="submit">注册</button>
+    </form>
+{% endblock %}  <!-- 结束内容块 -->

@@ -1,0 +1,113 @@
+{% extends "base.html" %}  <!-- 继承基础模板 -->
+
+{% block content %}
+<div class="post-detail">
+    <!-- 文章详情 -->
+    <article class="post">
+        <h2>{{ post.title }}</h2>  <!-- 文章标题 -->
+        <div class="meta">
+            <span>作者：{{ post.author.username }}</span>  <!-- 文章作者 -->
+            <span>发布时间：{{ post.date_posted.strftime('%Y-%m-%d %H:%M') }}</span>  <!-- 发布时间 -->
+        </div>
+        <div class="content">{{ post.content|safe }}</div>  <!-- 文章内容，支持 Markdown -->
+    </article>
+
+    <!-- 评论区域 -->
+    <div class="comments-section">
+        <h3>评论（{{ comments.total }}）</h3>  <!-- 评论总数 -->
+
+        <!-- 评论表单 -->
+        <form class="comment-form" method="POST">
+            {% if not username %}  <!-- 如果用户未登录，显示昵称输入框 -->
+            <div class="form-group">
+                <label>昵称：</label>
+                <input type="text" name="guest_name" required>
+            </div>
+            {% endif %}
+            <div class="form-group">
+                <textarea name="content" placeholder="输入你的评论..." required></textarea>  <!-- 评论内容输入框 -->
+            </div>
+            <button type="submit">提交评论</button>  <!-- 提交按钮 -->
+        </form>
+
+        <!-- 评论列表 -->
+        <div class="comments">
+            {% for comment in comments.items %}  <!-- 遍历评论 -->
+            <div class="comment">
+                <div class="comment-header">
+                    <!-- 评论者信息 -->
+                    <span class="author">
+                        {% if comment.author %}  <!-- 如果是注册用户 -->
+                            {{ comment.author.username }}
+                        {% else %}  <!-- 如果是匿名用户 -->
+                            {{ comment.guest_name }}
+                        {% endif %}
+                    </span>
+                    <!-- 评论时间 -->
+                    <span class="date">{{ comment.date_posted.strftime('%Y-%m-%d %H:%M') }}</span>
+                    <!-- 删除按钮（仅管理员可见） -->
+                    {% if user and user.is_admin %}
+                    <form action="{{ url_for('delete_comment', comment_id=comment.id) }}" method="POST" style="display:inline;">
+                        <button type="submit" class="delete-btn" onclick="return confirm('确定删除该评论吗？')">删除</button>
+                    </form>
+                    {% endif %}
+                </div>
+                <!-- 评论内容 -->
+                <div class="content">{{ comment.content|safe }}</div>
+
+                <!-- 回复按钮 -->
+                <button class="reply-btn" onclick="showReplyForm({{ comment.id }})">回复</button>
+
+                <!-- 回复表单 -->
+                <form id="reply-form-{{ comment.id }}" class="reply-form" method="POST" style="display:none;">
+                    <input type="hidden" name="parent_id" value="{{ comment.id }}">  <!-- 父评论ID -->
+                    <textarea name="content" placeholder="输入你的回复..." required></textarea>  <!-- 回复内容输入框 -->
+                    <button type="submit">提交回复</button>  <!-- 提交按钮 -->
+                </form>
+
+                <!-- 显示回复 -->
+                <div class="replies">
+                    {% for reply in comment.replies %}  <!-- 遍历回复 -->
+                    <div class="reply">
+                        <div class="reply-header">
+                            <!-- 回复者信息 -->
+                            <span class="author">
+                                {% if reply.author %}  <!-- 如果是注册用户 -->
+                                    {{ reply.author.username }}
+                                {% else %}  <!-- 如果是匿名用户 -->
+                                    {{ reply.guest_name }}
+                                {% endif %}
+                            </span>
+                            <!-- 回复时间 -->
+                            <span class="date">{{ reply.date_posted.strftime('%Y-%m-%d %H:%M') }}</span>
+                        </div>
+                        <!-- 回复内容 -->
+                        <div class="content">{{ reply.content|safe }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- 分页导航 -->
+        <div class="pagination">
+            {% if comments.has_prev %}  <!-- 上一页 -->
+            <a href="{{ url_for('post_detail', post_id=post.id, page=comments.prev_num) }}">上一页</a>
+            {% endif %}
+            <span>第 {{ comments.page }} 页 / 共 {{ comments.pages }} 页</span>  <!-- 当前页码 -->
+            {% if comments.has_next %}  <!-- 下一页 -->
+            <a href="{{ url_for('post_detail', post_id=post.id, page=comments.next_num) }}">下一页</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript 控制回复表单显示 -->
+<script>
+function showReplyForm(commentId) {
+    var form = document.getElementById('reply-form-' + commentId);
+    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+</script>
+{% endblock %}

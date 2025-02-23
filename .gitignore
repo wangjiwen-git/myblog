@@ -1,0 +1,19 @@
+# Python 相关
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+
+# 环境变量
+.env
+venv/
+env/
+
+# IDE 配置文件
+.vscode/
+.idea/
+
+# 静态文件（如果需要单独管理）
+static/
